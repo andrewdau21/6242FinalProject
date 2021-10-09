@@ -75,14 +75,15 @@ server <- function(input, output) {
                             showgrid = F,
                             showline = FALSE,
                             showticklabels = FALSE,
-                            zerolinecolor = '#ffff')
+                            zerolinecolor = '#ffff') 
         ) %>%
         layout(yaxis = list(title = '',
                             showgrid = F,
                             showline = FALSE,
                             showticklabels = FALSE,
                             zerolinecolor = '#ffff')
-        )
+        ) %>%
+        config(displayModeBar = FALSE)
       
       fig <- fig %>% add_trace(name = 'trace 0',mode = 'lines')
       
