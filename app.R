@@ -25,7 +25,7 @@ ui <- navbarPage("Next Pitch",
                          options = NULL),
            #plotOutput("diamond", click = "diamond_click"),
            #verbatimTextOutput("info"),
-           verbatimTextOutput("info2"),
+           #verbatimTextOutput("info2"),
            plotly::plotlyOutput("diamond_plotly")
           
         )
@@ -35,6 +35,7 @@ ui <- navbarPage("Next Pitch",
              mainPanel(
                
              )
+             
     )
     
     
@@ -44,51 +45,30 @@ ui <- navbarPage("Next Pitch",
 server <- function(input, output) {
   
 
+  
+  colorvec <- reactiveValues(colors =  c("black","black","black","black","black"))
+  #colorvec <- reactive({
+  #  c("black","black","black","black","black")
+  #})
     
-    output$diamond <- renderPlot({
-      
-      
-      bases =data.frame(x=c(0, 30, 0, -30, 0),
-                        y=c(0,75, 150, 75, 0)
-      )
-      
-      
-      ggplot(bases, aes(x,y)) + 
-        geom_point(shape = 22, colour = "black",fill="black", size = 5, stroke = 5) +
-        geom_path(aes(x=x, y=y), data=bases)
-      
-    })
-    
-    observeEvent(input$diamond_click,{
-      
-      output$info <- renderText({
-        if (input$diamond_click$x > 28 && input$diamond_click$x < 32 && 
-            input$diamond_click$y > 73 && input$diamond_click$y < 77)
-        { paste0("You clicked on first base.")}
-        
-        else if (input$diamond_click$x > -2 && input$diamond_click$x < 2 && 
-                 input$diamond_click$y > 148 && input$diamond_click$y < 152)
-        { paste0("You clicked on second base.")}
-        
-        else if (input$diamond_click$x > -32 && input$diamond_click$x < -28 && 
-                 input$diamond_click$y > 73 && input$diamond_click$y < 77)
-        { paste0("You clicked on second base.")}
-        
-      })
-      
-    })
+
+   
       
     output$diamond_plotly <- renderPlotly({
       
       bases =data.frame(x=c(0, 30, 0, -30, 0),
                         y=c(0,75, 150, 75, 0)
       )
+      #print (colorvec())
+      #colorsel <- c("black","black","red","red","black")
+      bases$colorsel <- colorvec$colors
+
       
     
       fig <- plot_ly(data = bases, x = ~x, y = ~y, source = "diamond_c",
-                     marker = list(size = 10,
+                     marker = list(size = 14,
                                    symbol = 'square',
-                                   color = 'black',
+                                   color = ~colorsel,
                                    line = list(color = 'black',
                                                width = 2))) %>%
         layout(xaxis = list(title = '',
@@ -122,23 +102,62 @@ server <- function(input, output) {
     })
     
     
-    observeEvent(event_data("plotly_click", source = "diamond_c"),{
+    observeEvent(event_data("plotly_click", source = "diamond_c", priority = "event"),{
       
-      event.data <- event_data("plotly_click", source = "diamond_c")
+      event.data <- event_data("plotly_click", source = "diamond_c", priority = "event")
       
       print(event.data)
 
-      output$info2 <- renderText({
+    
         if (event.data$x == 30 &&  event.data$y == 75)
-        { paste0("You clicked on first base.")}
+        {
+          tt <- colorvec$colors
+          
+          #print(tt[2])
+          if (tt[2] == "black")
+          {
+            tt[2]<- "red"
+          }
+          else
+          {
+            tt[2] <-"black"
+          }
+          #tempcolor <- c("black","red","black","black","black")
+          colorvec$colors <- tt}
 
         else if (event.data$x == 0 &&  event.data$y == 150)
-        { paste0("You clicked on second base.")}
+        {
+          tt <- colorvec$colors
+          
+          #print(tt[2])
+          if (tt[3] == "black")
+          {
+            tt[3]<- "red"
+          }
+          else
+          {
+            tt[3] <-"black"
+          }
+          #tempcolor <- c("black","red","black","black","black")
+          colorvec$colors <- tt}
 
         else if (event.data$x == -30 &&  event.data$y == 75)
-        { paste0("You clicked on second base.")}
+        {
+          tt <- colorvec$colors
+          
+          #print(tt[2])
+          if (tt[4] == "black")
+          {
+            tt[4]<- "red"
+          }
+          else
+          {
+            tt[4] <-"black"
+          }
+          #tempcolor <- c("black","red","black","black","black")
+          colorvec$colors <- tt}
 
-      })
+      
 
     })
     
