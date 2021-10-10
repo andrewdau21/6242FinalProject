@@ -20,15 +20,34 @@ ui <- navbarPage("Next Pitch",
    
     tabPanel("Simulator",
         # Show a plot of the generated distribution
-        mainPanel(
+        tabPanel("simulator",
+          column(width=4,
           selectizeInput('pitcher_select', 'Select a Pitcher:', choices = c("Stephen Strasburg", "Max Scherzer", "Jose Berrios"), selected = NULL, multiple = FALSE,
                          options = NULL),
            #plotOutput("diamond", click = "diamond_click"),
            #verbatimTextOutput("info"),
            #verbatimTextOutput("info2"),
            plotly::plotlyOutput("diamond_plotly")
-          
-        )
+          )
+          ,
+          column(width = 3,
+                 radioButtons("balls", label = h3("Balls"),
+                              choices = list("0" = 0, "1" = 1, "2" = 2, "3" = 3), 
+                              selected = NULL),
+          radioButtons("strikes", label = h3("Strikes"),
+                       choices = list("0" = 0, "1" = 1, "2" = 2), 
+                       selected = NULL))
+          ,
+          column(width = 5,
+                h3("Reserved Space for Model Output"),
+                h3("Current Parameters"),
+                verbatimTextOutput("parms"),
+                verbatimTextOutput("parms2"),
+                verbatimTextOutput("parms3"),
+                verbatimTextOutput("parms4")
+                )
+        ),
+        
     ),
     tabPanel("Help",
              # Show a plot of the generated distribution
@@ -161,6 +180,31 @@ server <- function(input, output) {
       
 
     })
+    
+    observe({
+      
+      print("in the observe")
+      abc <- (paste0("strikes: ", input$strikes, "  ", "balls: ",input$balls))
+      output$parms <- renderPrint(abc)
+      
+      if (colorvec$colors[2] == "red")
+      {
+      output$parms2 <- renderPrint("Runner on First")
+      }
+      else { output$parms2 <- renderPrint("")}
+      
+      if (colorvec$colors[3] == "red")
+      {
+        output$parms3 <- renderPrint("Runner on Second")
+      }
+      else { output$parms3 <- renderPrint("")}
+      if (colorvec$colors[4] == "red")
+      {
+        output$parms4 <- renderPrint("Runner on Third")
+      }
+      else { output$parms4 <- renderPrint("")}
+      
+      })
     
  
 }
