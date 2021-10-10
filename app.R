@@ -36,7 +36,11 @@ ui <- navbarPage("Next Pitch",
                               selected = NULL),
           radioButtons("strikes", label = h3("Strikes"),
                        choices = list("0" = 0, "1" = 1, "2" = 2), 
-                       selected = NULL))
+                       selected = NULL),
+          actionButton("runit",label="Run Algorithm",  icon("running"), 
+                       style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
+          )
+          
           ,
           column(width = 5,
                 h3("Reserved Space for Model Output"),
