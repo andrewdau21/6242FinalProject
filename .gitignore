@@ -17,3 +17,10 @@ bin-release/
 # should NOT be excluded as they contain compiler settings and other important
 # information for Eclipse / Flash Builder.
 .Rproj.user
+
+
+#data files
+*.csv
+
+#python cache
+__pycache__
