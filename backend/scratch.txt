@@ -1,0 +1,18 @@
+Things to do:
+
+1. Clean Data -- started. may need to make custom fields and filter unneccesary fields
+ - games.csv is not helpful
+ - player_names.csv for id -> name tieup
+ - pitches.csv for pitch detail
+ - at_bats.csv for tie betweeen pitch and pitcher/game scenario 
+
+2. Divide by pitcher
+
+3. Analysis
+-- Begin Loop
+  a. Pick pitcher
+  -- Begin Loop 
+     a. Try model
+     b. Evaluate
+
+ 4. Compile outputs
