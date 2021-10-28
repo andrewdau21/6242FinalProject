@@ -132,6 +132,13 @@ server <- function(input, output) {
       df.long <- pivot_longer(d1, cols=10:14, names_to = "Pitch", values_to = "Probability") %>%
         select(Pitch, Probability)
       
+      bar_chart <- function(label, width = "100%", height = "16px", fill = "#00bfc4", background = NULL) {
+        bar <- div(style = list(background = fill, width = width, height = height))
+        chart <- div(style = list(flexGrow = 1, marginLeft = "8px", background = background), bar)
+        div(style = list(display = "flex", alignItems = "center"), label, chart)
+      }
+      
+      
       
       #output$outputtable <- DT::renderDataTable({
       #  DT::datatable(df.long)
