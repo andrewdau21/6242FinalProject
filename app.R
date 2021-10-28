@@ -10,6 +10,16 @@
 library(shiny)
 library(ggplot2)
 library(plotly)
+library(RMariaDB)
+library(Rcpp)
+library(glue)
+library(DT)
+library(dplyr)
+library(tidyr)
+library(htmltools)
+library(reactable)
+library(shinybusy)
+
 
 # Define UI for application that draws a histogram
 ui <- navbarPage("Next Pitch",
@@ -26,7 +36,7 @@ ui <- navbarPage("Next Pitch",
                          options = NULL),
            #plotOutput("diamond", click = "diamond_click"),
            #verbatimTextOutput("info"),
-           #verbatimTextOutput("info2"),
+           #verbatimTextOutput("testing"),
            plotly::plotlyOutput("diamond_plotly")
           )
           ,
@@ -44,6 +54,8 @@ ui <- navbarPage("Next Pitch",
           ,
           column(width = 5,
                 h3("Reserved Space for Model Output"),
+                #dataTableOutput("outputtable"),
+                reactableOutput("pitchprob"),
                 h3("Current Parameters"),
                 verbatimTextOutput("parms"),
                 verbatimTextOutput("parms2"),
@@ -74,7 +86,79 @@ server <- function(input, output) {
   #  c("black","black","black","black","black")
   #})
     
-
+  observeEvent(input$runit,{
+    
+    show_modal_spinner()
+               print("you clicked runnit")
+    
+    
+    
+  
+      
+      db_name <- "stats_main"
+      db_user <- "admin"
+      db_password <- "cSe6242!"
+      db_host <- "baseball.cfape4saa0af.us-east-1.rds.amazonaws.com"
+      db_port <- 3306
+      
+      balls <- isolate(input$balls)
+      
+      con <- dbConnect(
+        MariaDB(),
+        dbname = db_name,
+        username = db_user,
+        password = db_password,
+        host = db_host,
+        port = db_port
+      )
+    
+      
+      sql <- glue_sql("
+      SELECT *
+      FROM predictions
+      WHERE balls = {balls} 
+    ", .con = con)
+      rs <- dbSendQuery(con, sql)
+      d1 <- dbFetch(rs) # extract data
+      dbHasCompleted(rs)
+      
+      dbClearResult(rs)
+      dbListTables(con)
+      # clean up
+      dbDisconnect(con)
+      
+      #print(d1)
+      
+      df.long <- pivot_longer(d1, cols=10:14, names_to = "Pitch", values_to = "Probability") %>%
+        select(Pitch, Probability)
+      
+      
+      #output$outputtable <- DT::renderDataTable({
+      #  DT::datatable(df.long)
+        
+      output$pitchprob <- renderReactable({
+        
+        reactable(df.long,
+                  columns = list(
+                    Probability = colDef(name = "Probability", align = "left", cell = function(value) {
+                      width <- paste0(value /.01, "%")
+                      bar_chart(value, width = width, background = "#e1e1e1")
+                    })
+                  )
+        )
+        
+        })
+      
+   # })
+    
+               
+            
+      remove_modal_spinner()             
+               
+}
+               )
+               
+  
    
       
     output$diamond_plotly <- renderPlotly({
