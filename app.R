@@ -47,6 +47,9 @@ ui <- navbarPage("Next Pitch",
           radioButtons("strikes", label = h3("Strikes"),
                        choices = list("0" = 0, "1" = 1, "2" = 2), 
                        selected = NULL),
+          radioButtons("outs", label = h3("Outs"),
+                       choices = list("0" = 0, "1" = 1, "2" = 2), 
+                       selected = NULL),
           actionButton("runit",label="Run Algorithm",  icon("running"), 
                        style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
           )
@@ -102,6 +105,32 @@ server <- function(input, output) {
       db_port <- 3306
       
       balls <- isolate(input$balls)
+      strikes <- isolate(input$strikes)
+      outs <- isolate(input$outs)
+      
+    
+      
+      if (colorvec$colors[2] == "red")
+      {
+        runneronfirst = 1
+      }
+      else{runneronfirst = 0}
+      
+      if (colorvec$colors[3] == "red")
+      {
+        runneronsecond = 1
+      }
+      else{runneronsecond = 0}
+      if (colorvec$colors[4] == "red")
+      {
+        runneronthird = 1
+      }
+      else{runneronthird = 0}
+      
+      
+      
+      print('runner first')
+      print(runneronfirst)
       
       con <- dbConnect(
         MariaDB(),
@@ -116,7 +145,8 @@ server <- function(input, output) {
       sql <- glue_sql("
       SELECT *
       FROM predictions
-      WHERE balls = {balls} 
+      WHERE balls = {balls} and strikes = {strikes} and outs = {outs} 
+      and runner1 = {runneronfirst} and runner2 = {runneronsecond} and runner3 = {runneronthird}
     ", .con = con)
       rs <- dbSendQuery(con, sql)
       d1 <- dbFetch(rs) # extract data
@@ -282,7 +312,7 @@ server <- function(input, output) {
     observe({
       
       print("in the observe")
-      abc <- (paste0("strikes: ", input$strikes, "  ", "balls: ",input$balls))
+      abc <- (paste0("strikes: ", input$strikes, "  ", "balls: ",input$balls, "  ", "outs: ",input$outs))
       output$parms <- renderPrint(abc)
       
       if (colorvec$colors[2] == "red")
