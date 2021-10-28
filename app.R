@@ -88,7 +88,7 @@ server <- function(input, output) {
     
   observeEvent(input$runit,{
     
-    show_modal_spinner()
+    #show_modal_spinner()
                print("you clicked runnit")
     
     
@@ -160,7 +160,7 @@ server <- function(input, output) {
     
                
             
-      remove_modal_spinner()             
+      #remove_modal_spinner()             
                
 }
                )
@@ -180,6 +180,7 @@ server <- function(input, output) {
       
     
       fig <- plot_ly(data = bases, x = ~x, y = ~y, source = "diamond_c",
+                     
                      marker = list(size = 14,
                                    symbol = 'square',
                                    color = ~colorsel,
@@ -189,17 +190,19 @@ server <- function(input, output) {
                             showgrid = F,
                             showline = FALSE,
                             showticklabels = FALSE,
+                            fixedrange = TRUE,
                             zerolinecolor = '#ffff') 
         ) %>%
         layout(yaxis = list(title = '',
                             showgrid = F,
                             showline = FALSE,
                             showticklabels = FALSE,
+                            fixedrange = TRUE,
                             zerolinecolor = '#ffff')
         ) %>%
         config(displayModeBar = FALSE)
       
-      fig <- fig %>% add_trace(name = 'trace 0',mode = 'lines')
+      fig <- fig %>% add_trace(name = 'trace 0',mode = 'lines') %>%  config(displayModeBar = FALSE)
       
       print("did i get here")
       fig
