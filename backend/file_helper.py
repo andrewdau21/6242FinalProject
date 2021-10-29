@@ -18,20 +18,15 @@ def load_atbats(pitcher_id = ''):
     atbats = atbats.reindex(sorted(atbats), axis=1)
     if (pitcher_id != ''):
         atbats = atbats.loc[(atbats['pitcher_id'] == pitcher_id)]
-    atbats['stand'] = atbats['stand'].replace('L', 1.0)
-    atbats['stand'] = atbats['stand'].replace('R', 0.0)
     return atbats
 
 def pitch_class(pitch_type):
     if (pitch_type in fastballs):
-        return 'fast'
+        return 1
     elif (pitch_type in offspeeds):
-        return 'off'
+        return 2
     elif (pitch_type in breakings):
-        return 'break'
-    else:
-        print('Found a pitch I do not recognize: {}'.format(pitch_type))
-        return 'unknown'
+        return 3
 
 def append_previous_pitch_class(pitches):
     temp_pitches = pitches.copy().reset_index()
@@ -41,7 +36,7 @@ def append_previous_pitch_class(pitches):
     joined_temp_pitches = joined_temp_pitches[['index_x','pitch_class_y']]
     pitches = pitches.merge(right=joined_temp_pitches, left_index=True, right_on='index_x')
     pitches = pitches.rename(columns={'pitch_class_y':'prev_pitch_class'})
-    pitches['prev_pitch_class'] = pitches['prev_pitch_class'].replace(nan, 'unknown')
+    pitches['prev_pitch_class'] = pitches['prev_pitch_class'].replace(nan, 0)
     return pitches
 
 def load_pitches(atbat_ids = ''):
@@ -54,5 +49,7 @@ def load_pitches(atbat_ids = ''):
     pitches = pitches[pitches['pitch_type'].isin(valid_pitches)]
     pitches['pitch_class'] = pitches['pitch_type'].apply(lambda x: pitch_class(x))
     pitches = append_previous_pitch_class(pitches)
+    pitches['pitch_class'] = pitches['pitch_class'].astype('category')
+    pitches['prev_pitch_class'] = pitches['prev_pitch_class'].astype('category')
 
     return pitches[columns_of_concern]
