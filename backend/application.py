@@ -1,3 +1,4 @@
+import sys
 import pandas as pd
 from sklearn import neural_network
 import file_helper as FileHelper
@@ -11,17 +12,19 @@ from sklearn.ensemble import RandomForestClassifier
 predictors = ['b_count', 's_count', 'on_1b', 'on_2b', 'on_3b', 'outs', 'prev_pitch_class']
 response = ['pitch_class']
 
+_, firstName, lastName = sys.argv
+
 #Bring in the names
-player_jon_lester = FileHelper.load_players(("Jon", "Lester"))
+player = FileHelper.load_players((firstName, lastName))
 
 #Bring in the at bats for a pitcher
-jon_lester_atbats = FileHelper.load_atbats(player_jon_lester.loc[0].at['id'])
+atbats = FileHelper.load_atbats(player.loc[0].at['id'])
 
 #Bring in the pitches for the at basts for a pitcher
-jon_lester_pitches = FileHelper.load_pitches(jon_lester_atbats['ab_id'].tolist())
+players_pitches = FileHelper.load_pitches(atbats['ab_id'].tolist())
 
 #Split into train and test
-predict_train, predict_test, response_train, response_test = train_test_split(jon_lester_pitches[predictors], jon_lester_pitches[response], test_size=0.2)
+predict_train, predict_test, response_train, response_test = train_test_split(players_pitches[predictors], players_pitches[response], test_size=0.2)
 
 #Show the count of pitches for each pitch_class
 # print(collections.Counter(response_train['pitch_class']))
@@ -53,16 +56,16 @@ model_values = [log_regression_score, neur_net_score, decision_tree_score, rando
 best_model_value = max(model_values)
 if (best_model_value == log_regression_score):
     print('Log regression')
-    model = LogisticRegression(multi_class='multinomial').fit(jon_lester_pitches[predictors], jon_lester_pitches[response].values.flatten())
+    model = LogisticRegression(multi_class='multinomial').fit(players_pitches[predictors], players_pitches[response].values.flatten())
 elif (best_model_value == neur_net_score):
     print('Neural Network')
-    model = MLPClassifier().fit(jon_lester_pitches[predictors], jon_lester_pitches[response].values.flatten())
+    model = MLPClassifier().fit(players_pitches[predictors], players_pitches[response].values.flatten())
 elif (best_model_value == decision_tree_score):
     print('Decision Tree')
-    model = DecisionTreeClassifier().fit(jon_lester_pitches[predictors], jon_lester_pitches[response].values.flatten())
+    model = DecisionTreeClassifier().fit(players_pitches[predictors], players_pitches[response].values.flatten())
 elif (best_model_value == random_forest_score):
     print('Random Forest')
-    model = RandomForestClassifier().fit(jon_lester_pitches[predictors], jon_lester_pitches[response].values.flatten())
+    model = RandomForestClassifier().fit(players_pitches[predictors], players_pitches[response].values.flatten())
 
 #Build classification output [real output dataset]
 all_possible_pitches = pd.DataFrame(columns=predictors)
@@ -81,4 +84,4 @@ probabilities = model.predict_proba(all_possible_pitches)
 probabilities_df = pd.DataFrame(probabilities, columns=['fastball', 'offspeed','breaking'])
 final_df = pd.concat([all_possible_pitches, probabilities_df], axis=1)
 
-FileHelper.write_to_file(('Jon','Lester'), final_df)
+FileHelper.write_to_file((firstName, lastName), final_df)
