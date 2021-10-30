@@ -1,5 +1,6 @@
 from numpy import nan
 import pandas as pd
+import os
 valid_pitches = ['CH', 'CU', 'KC', 'KN', 'SC', 'SL','FA', 'FC', 'FF', 'FS', 'FT', 'SI']
 fastballs = ['FC', 'FF', 'FS', 'FT', 'SI','FA']
 offspeeds = ['CH', 'KN']
@@ -53,3 +54,9 @@ def load_pitches(atbat_ids = ''):
     pitches['prev_pitch_class'] = pitches['prev_pitch_class'].astype('category')
 
     return pitches[columns_of_concern]
+
+
+def write_to_file(name, data):
+    if (not os.path.exists('output')):
+        os.makedirs('output')
+    data.to_csv('output/{}_{}_pitch_probs.csv'.format(name[0], name[1]))
