@@ -10,8 +10,8 @@ columns_of_concern = ['ab_id', 'pitch_num', 'b_count', 's_count', 'on_1b', 'on_2
 def load_players(name=('', '')):
     players = pd.read_csv('./data/player_names.csv')
     if ((name != ('',''))):
-        players = players.loc[(players['first_name'] == name[0]) & (players['last_name'] == name[1])]
-    return players
+        player = players.loc[(players['first_name'] == name[0]) & (players['last_name'] == name[1])]
+    return player
 
 
 def load_atbats(pitcher_id = ''):

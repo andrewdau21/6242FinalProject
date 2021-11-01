@@ -13,12 +13,13 @@ predictors = ['b_count', 's_count', 'on_1b', 'on_2b', 'on_3b', 'outs', 'prev_pit
 response = ['pitch_class']
 
 _, firstName, lastName = sys.argv
+print('...gathering data for {} {}'.format(firstName, lastName))
 
 #Bring in the names
 player = FileHelper.load_players((firstName, lastName))
 
 #Bring in the at bats for a pitcher
-atbats = FileHelper.load_atbats(player.loc[0].at['id'])
+atbats = FileHelper.load_atbats(player.iloc[0,0])
 
 #Bring in the pitches for the at basts for a pitcher
 players_pitches = FileHelper.load_pitches(atbats['ab_id'].tolist())
@@ -77,11 +78,14 @@ for balls in range(0,4):
                     for on_3b in (True, False):
                         for prev_pitch_class in (0, 1, 2, 3):
                             new_row = {"b_count":balls, "s_count":strikes, "outs":outs, "on_1b":on_1b, \
-                                "on_2b":on_2b, "on_3b":on_3b, "prev_pitch_class":prev_pitch_class, "model": model_type}
+                                "on_2b":on_2b, "on_3b":on_3b, "prev_pitch_class":prev_pitch_class}
                             all_possible_pitches = all_possible_pitches.append(new_row, ignore_index=True)
                             
 probabilities = model.predict_proba(all_possible_pitches)
 probabilities_df = pd.DataFrame(probabilities, columns=['fastball', 'offspeed','breaking'])
 final_df = pd.concat([all_possible_pitches, probabilities_df], axis=1)
+final_df['model'] = model_type
 
 FileHelper.write_to_file((firstName, lastName), final_df)
+
+print('...best model for {} {} was {}'.format(firstName, lastName, model_type))
