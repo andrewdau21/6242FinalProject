@@ -16,3 +16,9 @@ Things to do:
      b. Evaluate
 
  4. Compile outputs
+
+Which models did we say we want to try?
+- Logistic Regression
+- Neural Networks
+- Decision Tree
+- Random Forest

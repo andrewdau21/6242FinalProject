@@ -20,6 +20,7 @@ bin-release/
 
 
 #data files
+output/
 *.csv
 
 #python cache
