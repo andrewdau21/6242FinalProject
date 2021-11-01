@@ -55,16 +55,16 @@ print('random_forest:', random_forest_score)
 model_values = [log_regression_score, neur_net_score, decision_tree_score, random_forest_score]
 best_model_value = max(model_values)
 if (best_model_value == log_regression_score):
-    print('Log regression')
+    model_type = "Logistic Regression"
     model = LogisticRegression(multi_class='multinomial').fit(players_pitches[predictors], players_pitches[response].values.flatten())
 elif (best_model_value == neur_net_score):
-    print('Neural Network')
+    model_type = "Neural Network"
     model = MLPClassifier().fit(players_pitches[predictors], players_pitches[response].values.flatten())
 elif (best_model_value == decision_tree_score):
-    print('Decision Tree')
+    model_type = "Decision Tree"
     model = DecisionTreeClassifier().fit(players_pitches[predictors], players_pitches[response].values.flatten())
 elif (best_model_value == random_forest_score):
-    print('Random Forest')
+    model_type = "Random Forest"
     model = RandomForestClassifier().fit(players_pitches[predictors], players_pitches[response].values.flatten())
 
 #Build classification output [real output dataset]
@@ -77,7 +77,7 @@ for balls in range(0,4):
                     for on_3b in (True, False):
                         for prev_pitch_class in (0, 1, 2, 3):
                             new_row = {"b_count":balls, "s_count":strikes, "outs":outs, "on_1b":on_1b, \
-                                "on_2b":on_2b, "on_3b":on_3b, "prev_pitch_class":prev_pitch_class}
+                                "on_2b":on_2b, "on_3b":on_3b, "prev_pitch_class":prev_pitch_class, "model": model_type}
                             all_possible_pitches = all_possible_pitches.append(new_row, ignore_index=True)
                             
 probabilities = model.predict_proba(all_possible_pitches)
