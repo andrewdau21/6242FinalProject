@@ -9,3 +9,8 @@ Download each file (atbats.csv, pitches.csv, layer_names.csv) and place the in t
 The application.py program does the bulk of the heavy lifting.  This is the file you want to run.
 
 The file_helper.py does the reading of the files
+
+## How to Run
+Assuming you have python installed on your local PC and the data setup correctly, ensure you are in the 'backend' directory and run the following command: python application.py <firstName> <lastName>
+
+This will generate a file in the 'output' folder titled: <firstName>_<lastName>_pitch_probabilities.csv
