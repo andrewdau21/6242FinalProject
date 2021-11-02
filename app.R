@@ -32,7 +32,9 @@ ui <- navbarPage("Next Pitch",
         # Show a plot of the generated distribution
         tabPanel("simulator",
           column(width=4,
-          selectizeInput('pitcher_select', 'Select a Pitcher:', choices = c("Stephen Strasburg", "Max Scherzer", "Jose Berrios"), selected = NULL, multiple = FALSE,
+          selectizeInput('pitcher_select', 'Select a Pitcher:', choices = c("Jon Lester"), selected = NULL, multiple = FALSE,
+                         options = NULL),
+          selectizeInput('previous_pitch', 'Select a Previous Pitch:', choices = c("None" = 0, "Fastball"=1, "Offspeed" = 2, "Breaking" = 3), selected = NULL, multiple = FALSE,
                          options = NULL),
            #plotOutput("diamond", click = "diamond_click"),
            #verbatimTextOutput("info"),
@@ -59,6 +61,9 @@ ui <- navbarPage("Next Pitch",
                 h3("Reserved Space for Model Output"),
                 #dataTableOutput("outputtable"),
                 reactableOutput("pitchprob"),
+                h3("This is just an example heat map"),
+                h4("This is getting busy, need to clean"),
+                plotlyOutput("example_heat"),
                 h3("Current Parameters"),
                 verbatimTextOutput("parms"),
                 verbatimTextOutput("parms2"),
@@ -107,6 +112,7 @@ server <- function(input, output) {
       balls <- isolate(input$balls)
       strikes <- isolate(input$strikes)
       outs <- isolate(input$outs)
+      previouspitch = isolate(input$previous_pitch)
       
     
       
@@ -147,6 +153,7 @@ server <- function(input, output) {
       FROM predictions
       WHERE balls = {balls} and strikes = {strikes} and outs = {outs} 
       and runner1 = {runneronfirst} and runner2 = {runneronsecond} and runner3 = {runneronthird}
+      and previouspitch = {previouspitch}
     ", .con = con)
       rs <- dbSendQuery(con, sql)
       d1 <- dbFetch(rs) # extract data
@@ -159,7 +166,7 @@ server <- function(input, output) {
       
       #print(d1)
       
-      df.long <- pivot_longer(d1, cols=10:14, names_to = "Pitch", values_to = "Probability") %>%
+      df.long <- pivot_longer(d1, cols=10:12, names_to = "Pitch", values_to = "Probability") %>%
         select(Pitch, Probability)
       
       bar_chart <- function(label, width = "100%", height = "16px", fill = "#00bfc4", background = NULL) {
@@ -248,6 +255,32 @@ server <- function(input, output) {
       
       
     })
+    
+    output$example_heat <- renderPlotly({
+      strike_zones <- data.frame(
+        x1 = rep(-1.5:0.5, each = 3),
+        x2 = rep(-0.5:1.5, each = 3),
+        y1 = rep(1.5:3.5, 3),
+        y2 = rep(2.5:4.5, 3),
+        z = factor(c(7, 4, 1, 8, 5, 2, 9, 6, 3))
+      )
+      
+      strike_zones$labcol <- c("red","red","yellow","orange","orange","red","yellow","red","red")
+      
+      abc <- ggplot() +
+        xlim(-3, 3) + xlab("") +
+        ylim(0, 6) + ylab("") +
+        geom_rect(data = strike_zones,
+                  aes(xmin = x1, xmax = x2, ymin = y2, ymax = y1), fill = strike_zones$labcol, color = "grey20") +
+        geom_text(data = strike_zones,
+                  aes(x = x1 + (x2 - x1)/2, y = y1 + (y2 - y1)/2, label = z),
+                  size = 7, fontface = 2, color = I("grey20")) +
+        theme_bw() + theme(legend.position = "none")
+      
+      
+      ggplotly(abc)
+    }
+    )
     
     
     observeEvent(event_data("plotly_click", source = "diamond_c", priority = "event"),{
