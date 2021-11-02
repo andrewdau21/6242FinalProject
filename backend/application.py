@@ -13,12 +13,13 @@ predictors = ['b_count', 's_count', 'on_1b', 'on_2b', 'on_3b', 'outs', 'prev_pit
 response = ['pitch_class']
 
 _, firstName, lastName = sys.argv
+print('...gathering data for {} {}'.format(firstName, lastName))
 
 #Bring in the names
 player = FileHelper.load_players((firstName, lastName))
 
 #Bring in the at bats for a pitcher
-atbats = FileHelper.load_atbats(player.loc[0].at['id'])
+atbats = FileHelper.load_atbats(player.iloc[0,0])
 
 #Bring in the pitches for the at basts for a pitcher
 players_pitches = FileHelper.load_pitches(atbats['ab_id'].tolist())
@@ -55,16 +56,16 @@ print('random_forest:', random_forest_score)
 model_values = [log_regression_score, neur_net_score, decision_tree_score, random_forest_score]
 best_model_value = max(model_values)
 if (best_model_value == log_regression_score):
-    print('Log regression')
+    model_type = "Logistic Regression"
     model = LogisticRegression(multi_class='multinomial').fit(players_pitches[predictors], players_pitches[response].values.flatten())
 elif (best_model_value == neur_net_score):
-    print('Neural Network')
+    model_type = "Neural Network"
     model = MLPClassifier().fit(players_pitches[predictors], players_pitches[response].values.flatten())
 elif (best_model_value == decision_tree_score):
-    print('Decision Tree')
+    model_type = "Decision Tree"
     model = DecisionTreeClassifier().fit(players_pitches[predictors], players_pitches[response].values.flatten())
 elif (best_model_value == random_forest_score):
-    print('Random Forest')
+    model_type = "Random Forest"
     model = RandomForestClassifier().fit(players_pitches[predictors], players_pitches[response].values.flatten())
 
 #Build classification output [real output dataset]
@@ -83,5 +84,8 @@ for balls in range(0,4):
 probabilities = model.predict_proba(all_possible_pitches)
 probabilities_df = pd.DataFrame(probabilities, columns=['fastball', 'offspeed','breaking'])
 final_df = pd.concat([all_possible_pitches, probabilities_df], axis=1)
+final_df['model'] = model_type
 
 FileHelper.write_to_file((firstName, lastName), final_df)
+
+print('...best model for {} {} was {}'.format(firstName, lastName, model_type))
