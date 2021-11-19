@@ -14,3 +14,5 @@ The file_helper.py does the reading of the files
 Assuming you have python installed on your local PC and the data setup correctly, ensure you are in the 'backend' directory and run the following command: python application.py <firstName> <lastName>
 
 This will generate a file in the 'output' folder titled: <firstName>_<lastName>_pitch_probabilities.csv
+
+This will also generate (or append to) a file in the 'output' folder titled "results.txt" with information about what model was chosen, what parameters were chosen for the model and what the model accuracy scores were

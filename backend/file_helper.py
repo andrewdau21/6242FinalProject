@@ -60,3 +60,40 @@ def write_to_file(name, data):
     if (not os.path.exists('output')):
         os.makedirs('output')
     data.to_csv('output/{}_{}_pitch_probs.csv'.format(name[0], name[1]))
+
+def write_model_compare_results(results):
+    if (not os.path.exists('output')):
+        os.makedirs('output')
+    results_file = open("output/results.txt", "a")
+    results_file.write("\n\n")
+    
+    results_file.write("-----------------------------------------")
+    results_file.write("\nPitcher: {}".format(results['pitcher']))
+    
+    results_file.write("\n\tBest Model: {}".format(results['best_model']))
+
+    results_file.write("\n\n\tLog Regression - ")
+    results_file.write("\n\t\tscore: {}".format(results['log_regression']['score']))
+    results_file.write("\n\t\tparameter(s):")
+    for param in results['log_regression']['parameter(s)'].split(','):
+        results_file.write("\n\t\t\t{}".format(param))
+    
+    results_file.write("\n\tNeural Network - ")
+    results_file.write("\n\t\tscore: {}".format(results['neural_network']['score']))
+    results_file.write("\n\t\tparameter(s):")
+    for param in results['neural_network']['parameter(s)'].split(','):
+        results_file.write("\n\t\t\t{}".format(param))
+    
+    results_file.write("\n\tDecision Tree - ")
+    results_file.write("\n\t\tscore: {}".format(results['decision_tree']['score']))
+    results_file.write("\n\t\tparameter(s):")
+    for param in results['decision_tree']['parameter(s)'].split(','):
+        results_file.write("\n\t\t\t{}".format(param))
+    
+    results_file.write("\n\tRandom Forest - ")
+    results_file.write("\n\t\tscore: {}".format(results['random_forest']['score']))
+    results_file.write("\n\t\tparameter(s):")
+    for param in results['random_forest']['parameter(s)'].split(','):
+        results_file.write("\n\t\t\t{}".format(param))
+    results_file.write("\n-----------------------------------------")
+    results_file.close()
