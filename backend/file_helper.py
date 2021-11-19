@@ -7,8 +7,11 @@ offspeeds = ['CH', 'KN']
 breakings = ['CU', 'KC', 'SC', 'SL']
 columns_of_concern = ['ab_id', 'pitch_num', 'b_count', 's_count', 'on_1b', 'on_2b', 'on_3b', 'outs', 'pitch_class', 'prev_pitch_class']
 
+def load_all_players():
+    return pd.read_csv('./data/player_names.csv')
+
 def load_players(name=('', '')):
-    players = pd.read_csv('./data/player_names.csv')
+    players = load_all_players()
     if ((name != ('',''))):
         player = players.loc[(players['first_name'] == name[0]) & (players['last_name'] == name[1])]
     return player
