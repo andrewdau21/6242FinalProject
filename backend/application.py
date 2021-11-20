@@ -1,5 +1,6 @@
 import sys
 import pandas as pd
+import numpy as np
 from sklearn import neural_network
 import file_helper as FileHelper
 import collections
@@ -94,6 +95,18 @@ def run_all(firstName, lastName):
                                 all_possible_pitches = all_possible_pitches.append(new_row, ignore_index=True)
                                 
     probabilities = model.predict_proba(all_possible_pitches)
+    if (len(model.classes_) < 3):        
+        if (2 not in model.classes_):
+            zeros = np.zeros(probabilities.shape[0])
+            a = probabilities[:,0]
+            c = probabilities[:,1]
+            probabilities = np.c_[a,zeros,c]
+        elif (3 not in model.classes_):
+            zeros = np.zeros(probabilities.shape[0])
+            a = probabilities[:,0]
+            b = probabilities[:,1]
+            probabilities = np.c_[a,b,zeros]
+
     probabilities_df = pd.DataFrame(probabilities, columns=['fastball', 'offspeed','breaking'])
     final_df = pd.concat([all_possible_pitches, probabilities_df], axis=1)
     final_df['model'] = model_type
