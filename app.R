@@ -20,7 +20,7 @@ library(htmltools)
 library(reactable)
 library(shinybusy)
 library(shinyjs)
-
+library(sqldf)
 
 # Define UI for application that draws a histogram
 ui <- navbarPage("Next Pitch",
@@ -34,7 +34,7 @@ ui <- navbarPage("Next Pitch",
         tabPanel("simulator",
          mainPanel(
           column(width=8,
-          selectizeInput('pitcher_select', 'Select a Pitcher:', choices = c("Jon Lester"), selected = NULL, multiple = FALSE,
+          selectizeInput('pitcher_select', 'Select a Pitcher:', choices = c("Jon Lester", "Aaron Nola"), selected = NULL, multiple = FALSE,
                          options = NULL),
           selectizeInput('previous_pitch', 'Select a Previous Pitch:', choices = c("None" = 0, "Fastball"=1, "Offspeed" = 2, "Breaking" = 3), selected = NULL, multiple = FALSE,
                          options = NULL),
@@ -145,6 +145,7 @@ server <- function(input, output) {
       strikes <- isolate(input$strikes)
       outs <- isolate(input$outs)
       previouspitch = isolate(input$previous_pitch)
+      pitcher <- isolate(input$pitcher_select)
       
      
     
@@ -192,7 +193,7 @@ server <- function(input, output) {
       FROM predictions
       WHERE balls = {balls} and strikes = {strikes} and outs = {outs} 
       and runner1 = {runneronfirst} and runner2 = {runneronsecond} and runner3 = {runneronthird}
-      and previouspitch = {previouspitch}
+      and previouspitch = {previouspitch} and pitcher = {pitcher}
     ", .con = con)
       rs <- dbSendQuery(con, sql)
       d1 <- dbFetch(rs) # extract data
@@ -246,15 +247,37 @@ server <- function(input, output) {
         })
       
       output$example_heat <- renderPlotly({
+        # strike_zones <- data.frame(
+        #   x1 = rep(-1.5:0.5, each = 3),
+        #   x2 = rep(-0.5:1.5, each = 3),
+        #   y1 = rep(1.5:3.5, 3),
+        #   y2 = rep(2.5:4.5, 3),
+        #   z = factor(c(7, 4, 1, 8, 5, 2, 9, 6, 3))
+        # )
+        # 
+        # strike_zones$labcol <- c("red","red","yellow","orange","orange","red","yellow","red","red")
+        # 
+        
         strike_zones <- data.frame(
           x1 = rep(-1.5:0.5, each = 3),
           x2 = rep(-0.5:1.5, each = 3),
           y1 = rep(1.5:3.5, 3),
           y2 = rep(2.5:4.5, 3),
-          z = factor(c(7, 4, 1, 8, 5, 2, 9, 6, 3))
+          z = factor(c(round(d1$location7,2), round(d1$location4,2), round(d1$location1,2), round(d1$location8,2), round(d1$location5,2), 
+                       round(d1$location2,2), round(d1$location9,2), round(d1$location6,2), round(d1$location3,2)))
         )
         
-        strike_zones$labcol <- c("red","red","yellow","orange","orange","red","yellow","red","red")
+        
+        
+        
+        
+        strike_zones <- sqldf("select x1, x2, y1, y2, z, case
+      when z < .10 then 'yellow'
+      when z >= .15 then 'red'
+      else 'orange'
+      end as labcol
+    from strike_zones;")
+        
         
         abc <- ggplot() +
           xlim(-3, 3) + xlab("") +
@@ -264,10 +287,16 @@ server <- function(input, output) {
           geom_text(data = strike_zones,
                     aes(x = x1 + (x2 - x1)/2, y = y1 + (y2 - y1)/2, label = z),
                     size = 7, fontface = 2, color = I("grey20")) +
-          theme_bw() + theme(legend.position = "none")
+          theme_bw() + theme(legend.position = "none") + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                                                               panel.grid.minor = element_blank()) +
+          theme(line = element_blank(),
+                text = element_blank(),
+                title = element_blank())
+          
         
-        
-        ggplotly(abc)
+        ggplotly(abc) %>%
+          layout(xaxis = list(autorange = TRUE),
+                 yaxis = list(autorange = TRUE))
       }
       )
       
