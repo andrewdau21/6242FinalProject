@@ -1,3 +1,5 @@
+source("./db_connection.R")
+
 #
 # This is a Shiny web application. You can run the application by clicking
 # the 'Run App' button above.
@@ -34,7 +36,30 @@ ui <- navbarPage("Next Pitch",
         tabPanel("simulator",
          mainPanel(
           column(width=8,
-          selectizeInput('pitcher_select', 'Select a Pitcher:', choices = c("Jon Lester", "Aaron Nola"), selected = NULL, multiple = FALSE,
+          selectizeInput('pitcher_select', 'Select a Pitcher:', choices = c("Aaron Nola","Alex Wood","Andrew Cashner","Anibal Sanchez",
+                                                                            "Bartolo Colon","Carlos Carrasco", "Carlos Martinez",
+                                                                            "Carlos Rodon", "CC Sabathia", "Chad Bettis", "Charlie Morton",
+                                                                            "Chase Anderson", "Chris Archer", "Chris Sale", "Chris Tillman",
+                                                                            "Clayton Kershaw", "Clayton Richard", "Cole Hamels","Collin McHugh","Corey Kluber",
+                                                                            "Dallas Keuchel", "Dan Straily", "Danny Duffy", "David Price",
+                                                                            "Derek Holland", "Doug Fister", "Drew Pomeranz", "Dylan Bundy", "Edinson Volquez",
+                                                                            "Eduardo Rodriguez", "Ervin Santana", "Felix Hernandez", "Francisco Liriano",
+                                                                            "Gerrit Cole", "Gio Gonzalez", "Hector Santiago", "Ian Kennedy",
+                                                                            "Ivan Nova", "JA Happ", "Jacob deGrom", "Jaime Garcia", "Jake Arrieta"
+                                                                            ,"Jake Odorizzi", "James Paxton", "James Shields", "Jason Hammel",
+                                                                            "Jeff Samardzija", "Jeremy Hellickson", "Jesse Chavez", "Jhoulys Chacin",
+                                                                            "Jimmy Nelson", "John Lackey", "Johnny Cueto", "Jon Gray", 
+                                                                            "Jon Lester", "Jordan Zimmermann", "Jose Quintana", "Jose Urena",
+                                                                            "Julio Teheran", "Justin Verlander", "Kendall Graveman", 
+                                                                            "Kevin Gausman", "Kyle Gibson", "Kyle Hendricks","Lance Lynn",
+                                                                            "Lance McCullers", "Luis Severino","Madison Bumgarner", "Marco Estrada",
+                                                                            "Marcus Stroman", "Martin Perez", "Masahiro Tanaka", "Matt Harvey", 
+                                                                            "Matt Moore", "Matthew Boyd", "Max Scherzer", "Michael Wacha", 
+                                                                            "Miguel Gonzalez", "Mike Fiers", "Mike Foltynewicz", "Mike Leake",
+                                                                            "Noah Syndergaard", "Patrick Corbin", "RA Dickey", "Rick Porcello",
+                                                                            "Robbie Ray", "Sean Manaea", "Sonny Gray", "Stephen Strasburg", "Taijuan Walker",
+                                                                            "Tanner Roark", "Tom Koehler", "Trevor Bauer", "Ubaldo Jimenez", "Wade Miley",
+                                                                            "Wei-Yin Chen", "Yovani Gallardo", "Zach Davies", "Zack Godley", "Zack Greinke"), selected = NULL, multiple = FALSE,
                          options = NULL),
           selectizeInput('previous_pitch', 'Select a Previous Pitch:', choices = c("None" = 0, "Fastball"=1, "Offspeed" = 2, "Breaking" = 3), selected = NULL, multiple = FALSE,
                          options = NULL),
@@ -72,12 +97,17 @@ ui <- navbarPage("Next Pitch",
           #column(width = 5,
                 #h3("Reserved Space for Model Output"),
                 #dataTableOutput("outputtable"),
+                uiOutput("welcome_message"),
+                br(),
+                uiOutput("next_message"),
+                br(),
                 uiOutput("initial_message"),
                 uiOutput("initial_message2"),
                 uiOutput("pitchprobtitle"),
                 reactableOutput("pitchprob"),
                 br(),
                 br(),
+                uiOutput("historicpitchlocation"),
                 plotlyOutput("example_heat"),
                 br(),
                 br(),
@@ -86,7 +116,10 @@ ui <- navbarPage("Next Pitch",
                 uiOutput("modelparmsballs"),
                 uiOutput("modelparmsstrikes"),
                 uiOutput("modelparmsouts"),
-                uiOutput("modelparmsprev")
+                uiOutput("modelparmsprev"),
+                uiOutput("modelrunner1"),
+                uiOutput("modelrunner2"),
+                uiOutput("modelrunner3")
                 #h3("This is just an example heat map"),
                 #h4("This is getting busy, need to clean"),
                 
@@ -102,9 +135,10 @@ ui <- navbarPage("Next Pitch",
     ),
     tabPanel("Help",
              # Show a plot of the generated distribution
-             mainPanel(
-               
-             )
+            
+               #includeHTML("user_guide.html")
+             tags$iframe(seamless="seamless", src= "user_guide.html", width=1200, height=800)
+            
              
     )
     
@@ -112,7 +146,7 @@ ui <- navbarPage("Next Pitch",
 )
 
 # Define server logic required to draw a histogram
-server <- function(input, output) {
+server <- function(input, output,session) {
   
 
   
@@ -133,37 +167,43 @@ server <- function(input, output) {
     #shinyjs:: hide(id = "#initial_message.shiny-html-output.shiny-bound-output")
     output$initial_message <- renderUI(h3(""))
     output$initial_message2 <- renderUI(h3(""))
+    output$welcome_message <- renderUI(h3(""))
+    output$next_message <- renderUI(h3(""))
     output$pitchprobtitle <- renderUI(h4("Probability of Next Pitch:"))
-   
-      db_name <- "stats_main"
-      db_user <- "admin"
-      db_password <- "cSe6242!"
-      db_host <- "baseball.cfape4saa0af.us-east-1.rds.amazonaws.com"
-      db_port <- 3306
-      
+    output$historicpitchlocation <- renderUI(h4("Historic Pitch Location:"))
+
       balls <- isolate(input$balls)
       strikes <- isolate(input$strikes)
       outs <- isolate(input$outs)
       previouspitch = isolate(input$previous_pitch)
       pitcher <- isolate(input$pitcher_select)
       
+      if (previouspitch == 0){previouspitchmessage = ""}
+      if (previouspitch == 1){previouspitchmessage = "Previous Pitch: Fastball"}
+      if (previouspitch == 2) {previouspitchmessage = "Previous Pitch: Offspeed"}
+      if (previouspitch == 3){previouspitchmessage = "Previous Pitch: Breaking"}
      
-    
+      runneronfirstmessage = ""
+      runneronsecondmessage = ""
+      runneronthirdmessage = ""
       
       if (colorvec$colors[2] == "red")
       {
         runneronfirst = 1
+        runneronfirstmessage = "Runner on First"
       }
       else{runneronfirst = 0}
       
       if (colorvec$colors[3] == "red")
       {
         runneronsecond = 1
+        runneronsecondmessage = "Runner on Second"
       }
       else{runneronsecond = 0}
       if (colorvec$colors[4] == "red")
       {
         runneronthird = 1
+        runneronthirdmessage = "Runner on Third"
       }
       else{runneronthird = 0}
       
@@ -172,7 +212,10 @@ server <- function(input, output) {
       output$modelparmsballs <- renderUI(paste0("Balls: ", balls))
       output$modelparmsstrikes <- renderUI(paste0("Strikes: ", strikes)) 
       output$modelparmsouts <- renderUI(paste0("Outs: ", outs))
-      output$modelparmsprev <- renderUI(paste0("Previous Pitch: ", previouspitch))
+      output$modelparmsprev <- renderUI(previouspitchmessage)
+      output$modelrunner1 <- renderUI(paste0(runneronfirstmessage))
+      output$modelrunner2 <- renderUI(paste0(runneronsecondmessage))
+      output$modelrunner3 <- renderUI(paste0(runneronthirdmessage))
       
       
       print('runner first')
@@ -215,9 +258,21 @@ server <- function(input, output) {
         div(style = list(display = "flex", alignItems = "center"), label, chart)
       }
       
-      #print(df.long)
+      print(df.long)
       df.long$Pitch <- gsub("(?<=\\b)([a-z])", "\\U\\1", tolower(df.long$Pitch), perl=TRUE)
       df.long$Probability <- round(df.long$Probability,3)
+      
+      
+      modalval <- arrange(df.long, desc(Probability))
+      modalval2 <- (modalval[1,1])
+      showModal(modalDialog(
+        title = HTML('<img src="https://openclipart.org/image/800px/8296", height = "20", width= "20"> The Next Pitch Will Be:'),
+        #HTML('The Next Pitch Will Be: <img src="https://openclipart.org/image/800px/8296", height = "20", width= "20">'),
+        h3(modalval2),
+        easyClose = TRUE
+      ))
+      
+      
       
       #output$outputtable <- DT::renderDataTable({
       #  DT::datatable(df.long)
@@ -349,6 +404,14 @@ server <- function(input, output) {
       
       fig <- fig %>% add_trace(name = 'trace 0',mode = 'lines') %>%  config(displayModeBar = FALSE)
       
+      fig <- fig %>% add_annotations(
+        x= 0.5,
+        y= 0,
+        xref = "paper",
+        yref = "paper",
+        text = "<b>Click on base(s) to add a runner(s)</b>",
+        showarrow = F
+      )
       print("did i get here")
       fig
       
@@ -451,10 +514,11 @@ server <- function(input, output) {
       
       })
     
-    
-    output$initial_message <- renderUI(h3("Select Parameters"))
-    output$initial_message2 <- renderUI(h3("Click Run Algorithm"))
-   
+    output$welcome_message <- renderUI(h3("Welcome to the Next Pitch App"))
+    output$next_message <- renderUI(h4("This application is designed to predict the next pitch in a Major League Baseball game based on a series of parameters set by the user."))
+    output$initial_message <- renderUI(h4("Select your desired parameters, and then click 'Run Algorithm'."))
+    output$initial_message2 <- renderUI(h4("Your output will be generated and displayed here."))
+  
 }
 # Run the application 
 shinyApp(ui = ui, server = server)
